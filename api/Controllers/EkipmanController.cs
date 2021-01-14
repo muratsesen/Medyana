@@ -7,39 +7,40 @@ using api.Models.Persistance;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
+using api.Controllers.Resources;
 
 namespace api.Controllers
 {
     [ApiController]
-    [Route("api/klinik")]
-    public class KlinikController : ControllerBase
+    [Route("api/ekipman")]
+    public class EkipmanController : ControllerBase
     {
+        private readonly ILogger<EkipmanController> logger;
         private readonly ApplicationDbContext _context;
-        private readonly ILogger<KlinikController> logger;
-        public KlinikController(ILogger<KlinikController> logger, ApplicationDbContext _context)
+        public EkipmanController(ILogger<EkipmanController> logger, ApplicationDbContext _context)
         {
-            this.logger = logger;
             this._context = _context;
+            this.logger = logger;
 
         }
 
         #region API Methods     
 
         [HttpGet]
-        public async Task<IEnumerable<Klinik>> GetClinics()
+        public async Task<IEnumerable<Ekipman>> GetEquipments()
         {
-            var clinics = await _context.Klinik.ToListAsync();
-            return clinics;
+            var ekipman = await _context.Ekipman.Include(ekipman => ekipman.Klinik).ToListAsync();
+            return ekipman;
         }
 
         [HttpPost("ara")]
-        public async Task<IEnumerable<Klinik>> Search(string key)
+        public async Task<IEnumerable<Ekipman>> Search(string key)
         {
-            return await _context.Klinik.Where(c => c.Adi.Contains(key)).ToListAsync();
+            return await _context.Ekipman.Where(c => c.Adi.Contains(key)).ToListAsync();
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post(Klinik klinik)
+        public async Task<IActionResult> Post(EkipmanResource ekipmanResource)
         {
             if (!ModelState.IsValid)
             {
@@ -48,9 +49,17 @@ namespace api.Controllers
 
             try
             {
-                await _context.Klinik.AddAsync(klinik);
+                await _context.Ekipman.AddAsync(new Ekipman
+                {
+                    Adi = ekipmanResource.Adi,
+                    Adet = ekipmanResource.Adet,
+                    BirimFiyat = ekipmanResource.BirimFiyat,
+                    KullanimOrani = ekipmanResource.KullanimOrani,
+                    TeminTarihi = ekipmanResource.TeminTarihi,
+                    KlinikId = ekipmanResource.KlinikId
+                });
                 await _context.SaveChangesAsync();
-                return Ok(klinik);
+                return Ok(ekipmanResource);
             }
             catch (System.Exception)
             {
@@ -60,7 +69,7 @@ namespace api.Controllers
         }
 
         [HttpPut]
-        public async Task<IActionResult> Put(Klinik klinik)
+        public async Task<IActionResult> Put(Ekipman ekipman)
         {
             if (!ModelState.IsValid)
             {
@@ -68,9 +77,9 @@ namespace api.Controllers
             }
             try
             {
-                _context.Klinik.Update(klinik);
+                _context.Ekipman.Update(ekipman);
                 await _context.SaveChangesAsync();
-                return Ok(klinik);
+                return Ok(ekipman);
             }
             catch (System.Exception ex)
             {
@@ -84,19 +93,18 @@ namespace api.Controllers
         {
             try
             {
-                var klinik = _context.Klinik.Find(id);
-                if (klinik != null)
+                var ekipman = _context.Ekipman.Find(id);
+                if (ekipman != null)
                 {
-                    _context.Klinik.Remove(klinik);
+                    _context.Remove(ekipman);
                     await _context.SaveChangesAsync();
-                    return Ok(klinik);
+                    return Ok(ekipman);
                 }
                 else
                 {
                     ModelState.AddModelError("Item couldn't found!", "error");
                     return BadRequest(ModelState);
                 }
-
             }
             catch (System.Exception)
             {
