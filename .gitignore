@@ -362,4 +362,5 @@ MigrationBackup/
 FodyWeavers.xsd
 /NewMvcProject/vas.alibaba.com Başvuru İşlemleri.pdf
 
-.dll
+*.dll
+bin/

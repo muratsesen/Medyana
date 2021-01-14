@@ -11,8 +11,6 @@ namespace api.Models
         [StringLength(500)]
         public string Adi { get; set; }
         public DateTime? TeminTarihi { get; set; }
-        //Zorunlu
-        //Min 1
         [Required]
         [Range(1,int.MaxValue,ErrorMessage = "En az 1 değeri girilmeli!")]
         public int Adet { get; set; }

@@ -1,1 +1,0 @@
-INSERT into Klinik (Adi) VALUES ('Ortopedi');
