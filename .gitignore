@@ -364,3 +364,8 @@ FodyWeavers.xsd
 
 *.dll
 bin/
+api/obj/Debug/net5.0/api.assets.cache
+api/obj/Debug/net5.0/api.assets.cache
+api/obj/Debug/net5.0/api.csprojAssemblyReference.cache
+api/obj/Debug/net5.0/api.dll
+api/obj/Debug/net5.0/ref/api.dll
