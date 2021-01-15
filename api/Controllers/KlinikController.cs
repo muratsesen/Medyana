@@ -1,13 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using api.Models;
 using api.Models.Persistance;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
-
+using api.Controllers.Resources;
+using api.Extensions;
 namespace api.Controllers
 {
     [ApiController]
@@ -20,25 +22,39 @@ namespace api.Controllers
         {
             this.logger = logger;
             this._context = _context;
-
         }
 
         #region API Methods     
 
-        [HttpGet]
-        public async Task<IEnumerable<Klinik>> GetClinics()
+        [HttpPost("list")]
+        public async Task<QueryResult<Klinik>> List(KlinikFilter filter)
         {
-            var clinics = await _context.Klinik.ToListAsync();
-            return clinics;
+            var result = new QueryResult<Klinik>();
+            var query = _context.Klinik.AsQueryable();
+            #region Filter
+            if (!string.IsNullOrEmpty(filter.Adi))
+            {
+                query = query.Where(x => x.Adi.Contains(filter.Adi));
+            }
+            #endregion
+            #region Sort
+            var map = new Dictionary<string, Expression<Func<Klinik, object>>>
+            {
+                ["Adi"] = x => x.Adi
+            };
+            query = query.ApplyOrdering(filter, map);
+            #endregion
+
+            result.TotalItems = await query.CountAsync();
+
+            query = query.ApplyPaging(filter);
+
+            result.Items = await query.ToListAsync();
+
+            return result;
         }
 
-        [HttpPost("ara")]
-        public async Task<IEnumerable<Klinik>> Search(string key)
-        {
-            return await _context.Klinik.Where(c => c.Adi.Contains(key)).ToListAsync();
-        }
-
-        [HttpPost]
+        [HttpPost("create")]
         public async Task<IActionResult> Post(Klinik klinik)
         {
             if (!ModelState.IsValid)
@@ -59,7 +75,7 @@ namespace api.Controllers
             }
         }
 
-        [HttpPut]
+        [HttpPut("update")]
         public async Task<IActionResult> Put(Klinik klinik)
         {
             if (!ModelState.IsValid)
@@ -72,14 +88,14 @@ namespace api.Controllers
                 await _context.SaveChangesAsync();
                 return Ok(klinik);
             }
-            catch (System.Exception ex)
+            catch (System.Exception)
             {
                 ModelState.AddModelError("Item couldn't updated!", "error");
                 return BadRequest(ModelState);
             }
         }
 
-        [HttpDelete]
+        [HttpDelete("delete")]
         public async Task<IActionResult> Delete(int id)
         {
             try
